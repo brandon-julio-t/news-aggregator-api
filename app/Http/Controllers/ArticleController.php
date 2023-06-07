@@ -24,6 +24,20 @@ class ArticleController extends Controller
             );
         }
 
+        if ($category = $request->category) {
+            $query->where('category', $category);
+        }
+
+        $from = $request->from;
+        $to = $request->to;
+        if ($from && $to) {
+            $query->whereBetween('created_at', [$from, $to]);
+        } else if ($from && !$to) {
+            $query->where('created_at', '>=', $from);
+        } else if (!$from && $to) {
+            $query->where('created_at', '<=', $to);
+        }
+
         return $query->paginate();
     }
 
@@ -39,14 +53,6 @@ class ArticleController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(StoreArticleRequest $request)
@@ -59,15 +65,7 @@ class ArticleController extends Controller
      */
     public function show(Article $article)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Article $article)
-    {
-        //
+        return $article;
     }
 
     /**
