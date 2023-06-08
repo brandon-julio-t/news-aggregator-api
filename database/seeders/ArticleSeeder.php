@@ -24,7 +24,7 @@ class ArticleSeeder extends Seeder
             $responses = Http::pool(fn (Pool $pool) => [
                 $pool->get(
                     'https://newsapi.org/v2/everything',
-                    ['apiKey' => config('app.newsapi_api_key'), 'language' => 'en', 'domains' => 'techcrunch.com', 'q' => 'software']
+                    ['apiKey' => config('app.newsapi_api_key'), 'language' => 'en', 'domains' => 'techcrunch.com']
                 ),
 
                 $pool->get(
@@ -40,28 +40,24 @@ class ArticleSeeder extends Seeder
 
             $articles = collect();
 
-            foreach ([
-                'software' => $responses[0]->json()['articles'],
-                // 'tech' => $responses[1]->json()['articles'],
-                // 'science' => $responses[2]->json()['articles'],
-            ] as $category => $articleDataList) {
-                foreach ($articleDataList as $articleData) {
-                    $article = new Article();
-                    $article->title = $articleData['title'];
-                    // $article->description = Http::get($articleData['url'])->body();
-                    $article->description = '';
-                    $article->author = $articleData['author'] ?? $articleData['source']['name'];
-                    $article->category = $category;
-                    $article->source = $articleData['url'];
-                    $article->created_at = Carbon::parse($articleData['publishedAt'])->toDateTimeString();
-                    $articles->push($article);
-                }
+            logger(self::class . '@newsapi', [$responses[0]]);
+            logger(self::class . '@guardiansapi', [$responses[1]]);
+            logger(self::class . '@nytimes', [$responses[2]]);
+
+            foreach ($responses[0]->json()['articles'] as $articleData) {
+                $article = new Article();
+                $article->title = $articleData['title'];
+                $article->description = '';
+                $article->author = $articleData['author'] ?? $articleData['source']['name'];
+                $article->category = 'Technology';
+                $article->source = $articleData['url'];
+                $article->created_at = Carbon::parse($articleData['publishedAt'])->toDateTimeString();
+                $articles->push($article);
             }
 
             foreach ($responses[1]->json()['response']['results'] as $articleData) {
                 $article = new Article();
                 $article->title = $articleData['webTitle'];
-                // $article->description = Http::get($articleData['webUrl'])->body();
                 $article->description = '';
                 $article->author = 'The Guardian';
                 $article->category = $articleData['sectionName'];
@@ -73,10 +69,16 @@ class ArticleSeeder extends Seeder
 
             foreach ($responses[2]->json()['response']['docs'] as $articleData) {
                 $article = new Article();
-                $article->title = $articleData['abstract'];
-                // $article->description = Http::get($articleData['web_url'])->body();
+                $article->title = collect([
+                    $articleData['headline']['main'],
+                    $articleData['abstract'],
+                    $articleData['snippet'],
+                ])->filter()->first();
                 $article->description = '';
-                $article->author = str($articleData['byline']['original'])->replace('By ', '')->value;
+                $article->author = collect([
+                    str($articleData['byline']['original'])->replace('By ', '')->value,
+                    $articleData['source'],
+                ])->filter()->first();
                 $article->category = isset($articleData['subsection_name']) ? $articleData['subsection_name'] : $articleData['section_name'];
                 $article->source = $articleData['web_url'];
                 $article->created_at = Carbon::parse($articleData['pub_date'])->toDateTimeString();
@@ -84,8 +86,6 @@ class ArticleSeeder extends Seeder
             }
 
             $articles->each->save();
-
-            // event(new AggregateArticlesFromApisSuccess($articles));
         });
     }
 }
