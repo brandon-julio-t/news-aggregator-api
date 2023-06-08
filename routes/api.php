@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\UserArticlePreferenceController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -24,7 +25,7 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('articles/categories', [ArticleController::class, 'categories']);
     Route::apiResource('articles', ArticleController::class)->only(['index', 'show']);
+
+
+    Route::apiResource('users.user-article-preferences', UserArticlePreferenceController::class)->only(['index', 'update']);
 });
-
-
-// require __DIR__ . '/auth.php';
