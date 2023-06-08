@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Events\AggregateArticlesFromApisSuccess;
 use App\Models\Article;
 use Carbon\Carbon;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -23,15 +24,7 @@ class ArticleSeeder extends Seeder
             $responses = Http::pool(fn (Pool $pool) => [
                 $pool->get(
                     'https://newsapi.org/v2/everything',
-                    ['apiKey' => config('app.newsapi_api_key'), 'language' => 'en', 'excludeDomains' => 'google.com', 'q' => 'software']
-                ),
-                $pool->get(
-                    'https://newsapi.org/v2/everything',
-                    ['apiKey' => config('app.newsapi_api_key'), 'language' => 'en', 'excludeDomains' => 'google.com', 'q' => 'tech']
-                ),
-                $pool->get(
-                    'https://newsapi.org/v2/everything',
-                    ['apiKey' => config('app.newsapi_api_key'), 'language' => 'en', 'excludeDomains' => 'google.com', 'q' => 'science']
+                    ['apiKey' => config('app.newsapi_api_key'), 'language' => 'en', 'domains' => 'techcrunch.com', 'q' => 'software']
                 ),
 
                 $pool->get(
@@ -49,13 +42,14 @@ class ArticleSeeder extends Seeder
 
             foreach ([
                 'software' => $responses[0]->json()['articles'],
-                'tech' => $responses[1]->json()['articles'],
-                'science' => $responses[2]->json()['articles'],
+                // 'tech' => $responses[1]->json()['articles'],
+                // 'science' => $responses[2]->json()['articles'],
             ] as $category => $articleDataList) {
                 foreach ($articleDataList as $articleData) {
                     $article = new Article();
                     $article->title = $articleData['title'];
-                    $article->description = $articleData['content'];
+                    // $article->description = Http::get($articleData['url'])->body();
+                    $article->description = '';
                     $article->author = $articleData['author'] ?? $articleData['source']['name'];
                     $article->category = $category;
                     $article->source = $articleData['url'];
@@ -64,10 +58,11 @@ class ArticleSeeder extends Seeder
                 }
             }
 
-            foreach ($responses[3]->json()['response']['results'] as $articleData) {
+            foreach ($responses[1]->json()['response']['results'] as $articleData) {
                 $article = new Article();
                 $article->title = $articleData['webTitle'];
-                $article->description = $articleData['webUrl'];
+                // $article->description = Http::get($articleData['webUrl'])->body();
+                $article->description = '';
                 $article->author = 'The Guardian';
                 $article->category = $articleData['sectionName'];
                 $article->source = $articleData['webUrl'];
@@ -76,10 +71,11 @@ class ArticleSeeder extends Seeder
             }
 
 
-            foreach ($responses[4]->json()['response']['docs'] as $articleData) {
+            foreach ($responses[2]->json()['response']['docs'] as $articleData) {
                 $article = new Article();
                 $article->title = $articleData['abstract'];
-                $article->description = $articleData['web_url'];
+                // $article->description = Http::get($articleData['web_url'])->body();
+                $article->description = '';
                 $article->author = str($articleData['byline']['original'])->replace('By ', '')->value;
                 $article->category = isset($articleData['subsection_name']) ? $articleData['subsection_name'] : $articleData['section_name'];
                 $article->source = $articleData['web_url'];
@@ -88,6 +84,8 @@ class ArticleSeeder extends Seeder
             }
 
             $articles->each->save();
+
+            // event(new AggregateArticlesFromApisSuccess($articles));
         });
     }
 }
