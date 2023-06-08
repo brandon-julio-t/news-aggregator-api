@@ -44,6 +44,12 @@ class UserArticlePreferenceController extends Controller
         $attribute = $data['attribute'];
         $value = $data['value'];
 
+        $strVal = str($value);
+        if ($strVal->startsWith('http')) {
+            $domain = $strVal->explode('/')[2];
+            $value = str($domain)->replace('www.', '')->value;
+        }
+
         $preferences = collect($userArticlePreference[$attribute]);
 
         if ($action === 'like') {
