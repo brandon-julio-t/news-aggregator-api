@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateArticleRequest;
 use App\Models\UserArticlePreference;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class ArticleController extends Controller
 {
@@ -22,6 +23,8 @@ class ArticleController extends Controller
             $query->where(
                 fn (Builder $qb) => $qb->where('title', 'like', '%' . $q . '%')
                     ->orWhere('description', 'like', '%' . $q . '%')
+                    ->orWhere('author', 'like', '%' . $q . '%')
+                    ->orWhere('source', 'like', '%' . $q . '%')
             );
         }
 
@@ -80,6 +83,17 @@ class ArticleController extends Controller
         }
 
         return $query->paginate();
+    }
+
+    public function html(Article $article)
+    {
+        if (str($article->description)->isNotEmpty())
+            return $article->description;
+
+        return Http::withHeaders([
+            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.41',
+            'Accept' => 'text/html,application/xhtml+xml,application/xml',
+        ])->get($article->source)->body();
     }
 
     /**
