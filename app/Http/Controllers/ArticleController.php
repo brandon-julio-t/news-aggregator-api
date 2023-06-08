@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Article;
 use App\Http\Requests\StoreArticleRequest;
 use App\Http\Requests\UpdateArticleRequest;
+use App\Models\UserArticlePreference;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -50,6 +51,35 @@ class ArticleController extends Controller
             ->unique()
             ->sort()
             ->values();
+    }
+
+    public function forYou()
+    {
+        $preferences = UserArticlePreference::query()
+            ->whereBelongsTo(auth()->user())
+            ->firstOrFail();
+
+
+        /** @var array<string, string[]> */
+        $columnToDataMappings = [
+            'author' => $preferences->liked_authors,
+            'category' => $preferences->liked_categories,
+            'source' => $preferences->liked_sources,
+        ];
+
+        $query = Article::query();
+
+        foreach ($columnToDataMappings as $column => $likedData) {
+            if ($column === 'source') {
+                foreach ($likedData as $data) {
+                    $query->orWhere($column, 'like', '%' . $data . '%');
+                }
+            } else {
+                $query->orWhereIn($column, $likedData);
+            }
+        }
+
+        return $query->paginate();
     }
 
     /**

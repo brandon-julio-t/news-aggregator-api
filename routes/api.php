@@ -22,8 +22,10 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('articles/categories', [ArticleController::class, 'categories']);
+    Route::get('articles/for-you', [ArticleController::class, 'forYou']);
     Route::apiResource('articles', ArticleController::class)->only(['index', 'show']);
 
 
