@@ -42,7 +42,7 @@ class ArticleController extends Controller
             $query->where('created_at', '<=', $to);
         }
 
-        return $query->paginate();
+        return $query->latest()->paginate();
     }
 
     public function categories()
