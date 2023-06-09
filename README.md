@@ -9,32 +9,26 @@
 
 ## Getting Started
 
-1. Clone this repository.
-
-```bash
-git clone https://github.com/brandon-julio-t/news-aggregator-api
-```
-
-2. Install dependencies.
+1. Install dependencies.
 
 ```bash
 cd news-aggregator-api
 composer i
 ```
 
-3. Copy `.env.example` into `.env`.
+2. Copy `.env.example` into `.env`.
 
 ```bash
 cp .env.example .env
 ```
 
-4. Generate Laravel key.
+3. Generate Laravel key.
 
 ```bash
 php artisan key:generate
 ```
 
-5. Update environment variables (`.env`) for News API, frontend app, and Laravel Sail database.
+4. Update environment variables (`.env`) for News API, frontend app, and Laravel Sail database.
 
 ```bash
 # ...
@@ -51,13 +45,13 @@ DB_PASSWORD=password
 # ...
 ```
 
-7. Build and run the containers.
+5. Build and run the containers.
 
 ```bash
 ./vendor/bin/sail up
 ```
 
-8. Migrate database and seed the application (~10s - 20s).
+6. Migrate database and seed the application (~10s - 20s).
 
 ```bash
 ./vendor/bin/sail php artisan migrate --seed
