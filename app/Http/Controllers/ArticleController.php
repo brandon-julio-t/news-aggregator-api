@@ -62,8 +62,6 @@ class ArticleController extends Controller
             ->whereBelongsTo(auth()->user())
             ->firstOrFail();
 
-
-        /** @var array<string, string[]> */
         $columnToDataMappings = [
             'author' => $preferences->liked_authors,
             'category' => $preferences->liked_categories,
@@ -90,6 +88,7 @@ class ArticleController extends Controller
         return cache()->remember(
             $article->source,
             now()->addDay(),
+            // These headers are needed because some news site detect bot/browser request through these headers
             fn () => Http::withHeaders([
                 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.41',
                 'Accept' => 'text/html,application/xhtml+xml,application/xml',
